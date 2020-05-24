@@ -19,7 +19,7 @@ class DocumentsView: UIView {
         
         super.init(frame: CGRect.zero)
         
-        setConstraint()
+        setConstraints()
     }
     
     required init?(coder: NSCoder) {
@@ -27,7 +27,7 @@ class DocumentsView: UIView {
     }
     
     // MARK: - Private methods
-    private func setConstraint() {
+    private func setConstraints() {
         backgroundColor = UIColor.white
            
         filesTable.translatesAutoresizingMaskIntoConstraints = false
@@ -36,11 +36,11 @@ class DocumentsView: UIView {
         filesTable.register(FileCell.self, forCellReuseIdentifier: FileCell.identifier)
         addSubview(filesTable)
 
-           NSLayoutConstraint.activate([
+        NSLayoutConstraint.activate([
             filesTable.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
             filesTable.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor),
             filesTable.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor),
-               filesTable.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -(vc!.tabBarController?.tabBar.frame.height ?? 0))
-           ])
+            filesTable.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -(vc!.tabBarController?.tabBar.frame.height ?? 0))
+       ])
     }
 }

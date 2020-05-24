@@ -9,7 +9,7 @@
 import Foundation
 
 struct FileModel {
-    var url: String
+    var url: URL
     var name: String
     var size: Double
 }

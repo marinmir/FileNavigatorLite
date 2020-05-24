@@ -11,35 +11,35 @@ import UIKit
 class DownloadViewController: UIViewController {
     // MARK: - Properties
     private var urls: [URL] = []
-    private var flagsWasDownloaded: [Bool] = []
-    private var wasDownloadedAll = false
+    private var filesWereDownloaded: [Bool] = []
+    private var clickedDownloadAll = false
     
     // MARK: - Public methods
     override func viewDidLoad() {
         super.viewDidLoad()
         view = DownloadView(viewController: self)
 
-        getURLS()
-        flagsWasDownloaded = [Bool](repeating: false, count: urls.count)
+        getUrls()
+        filesWereDownloaded = [Bool](repeating: false, count: urls.count)
     }
     
     // MARK: Private methods
-    private func getURLS() {
+    private func getUrls() {
         guard let urlPlist = Bundle.main.url(forResource: "URLS", withExtension: "plist"),
             let contents = try? Data(contentsOf: urlPlist),
             let serial = try? PropertyListSerialization.propertyList(
                                   from: contents,
                                   format: nil),
             let serialUrls = serial as? [String: String] else {
-            print("Something went wrong!")
-        return
+                print("Something went wrong!")
+                return
         }
         urls = serialUrls.values.compactMap(URL.init)
     }
     
-    private func downloadAndSaveItem(index: Int) {
+    private func downloadFile(index: Int) {
         guard let view = self.view as? DownloadView,
-            let cell = view.URLSTable.cellForRow(at: IndexPath(row: index, section: 0)) as? URLCell else {
+            let cell = view.urlsTable.cellForRow(at: IndexPath(row: index, section: 0)) as? URLCell else {
                 return
         }
         cell.indicator.startAnimating()
@@ -49,10 +49,11 @@ class DownloadViewController: UIViewController {
                   return
               }
             
-            let loadedItem = try? Data(contentsOf: self.urls[index])
-            let localUrl = self.urls[index].lastPathComponent
-            try? loadedItem?.write(to: URL(fileURLWithPath: localUrl), options: .atomic)
-            self.postNotification(fileURL: localUrl, name: localUrl, size: Double(loadedItem?.count ?? 0))
+            guard let loadedItem = try? Data(contentsOf: self.urls[index]) else {
+                return
+            }
+            
+            self.saveFile(index: index, loadedItem: loadedItem)
             
             DispatchQueue.main.async {
                 cell.indicator.stopAnimating()
@@ -60,13 +61,26 @@ class DownloadViewController: UIViewController {
         }
     }
     
-    private func postNotification(fileURL: String, name: String, size: Double) {
+    private func saveFile(index: Int, loadedItem: Data) {
+        let localUrl = self.urls[index].lastPathComponent
+        
+        guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            assert(false)
+            return
+        }
+        let fullURL = dir.appendingPathComponent(localUrl)
+        try? loadedItem.write(to: fullURL, options: .atomic)
+        
+        self.postNotification(fileURL: fullURL, name: localUrl, size: Double(loadedItem.count))
+    }
+    
+    private func postNotification(fileURL: URL, name: String, size: Double) {
         let fileModel = createFileModel(URL: fileURL, name: name, size: size)
         let notificationData = ["file" : fileModel]
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: Constants.notificationFileName), object: nil, userInfo: notificationData)
     }
     
-    private func createFileModel(URL: String, name: String, size: Double) -> FileModel {
+    private func createFileModel(URL: URL, name: String, size: Double) -> FileModel {
         return FileModel(url: URL, name: name, size: size)
     }
     
@@ -77,16 +91,16 @@ class DownloadViewController: UIViewController {
     }
     
     private func wasDownloadedFile(index: Int) -> Bool {
-        return flagsWasDownloaded[index]
+        return filesWereDownloaded[index]
     }
     
     private func downloadAll() {
-        if !wasDownloadedAll {
-            wasDownloadedAll = true
+        if !clickedDownloadAll {
+            clickedDownloadAll = true
             for i in 0..<urls.count {
                 if !wasDownloadedFile(index: i){
-                    flagsWasDownloaded[i] = true
-                    downloadAndSaveItem(index: i)
+                    filesWereDownloaded[i] = true
+                    downloadFile(index: i)
                 }
             }
         } else {
@@ -108,7 +122,7 @@ extension DownloadViewController: UITableViewDelegate, UITableViewDataSource {
         if indexPath.row == urls.count
         {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: DownloadAllCell.identifier, for: indexPath) as? DownloadAllCell else {
-            return UITableViewCell()
+                return UITableViewCell()
             }
             
             return cell
@@ -131,8 +145,8 @@ extension DownloadViewController: UITableViewDelegate, UITableViewDataSource {
             if wasDownloadedFile(index: indexPath.row) {
                 showAlertAlreadyDownoaded(with: "File \(urls[indexPath.row].lastPathComponent) was already downloaded")
             } else {
-                flagsWasDownloaded[indexPath.row] = true
-                downloadAndSaveItem(index: indexPath.row)
+                filesWereDownloaded[indexPath.row] = true
+                downloadFile(index: indexPath.row)
             }
         }
         tableView.deselectRow(at: indexPath, animated: true)

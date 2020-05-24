@@ -10,7 +10,7 @@ import UIKit
 
 class DownloadView: UIView {
     // MARK: - Properties
-    let URLSTable = UITableView(frame: CGRect.zero, style: .plain)
+    let urlsTable = UITableView(frame: CGRect.zero, style: .plain)
     private weak var vc: DownloadViewController?
     
     // MARK: - Public methods
@@ -19,7 +19,7 @@ class DownloadView: UIView {
         
         super.init(frame: CGRect.zero)
         
-        setConstraint()
+        setConstraints()
     }
     
     required init?(coder: NSCoder) {
@@ -27,21 +27,21 @@ class DownloadView: UIView {
     }
     
     // MARK: - Private methods
-    private func setConstraint() {
+    private func setConstraints() {
         backgroundColor = UIColor.white
            
-        URLSTable.translatesAutoresizingMaskIntoConstraints = false
-        URLSTable.dataSource = vc
-        URLSTable.delegate = vc
-        URLSTable.register(URLCell.self, forCellReuseIdentifier: URLCell.identifier)
-        URLSTable.register(DownloadAllCell.self, forCellReuseIdentifier: DownloadAllCell.identifier)
-        addSubview(URLSTable)
+        urlsTable.translatesAutoresizingMaskIntoConstraints = false
+        urlsTable.dataSource = vc
+        urlsTable.delegate = vc
+        urlsTable.register(URLCell.self, forCellReuseIdentifier: URLCell.identifier)
+        urlsTable.register(DownloadAllCell.self, forCellReuseIdentifier: DownloadAllCell.identifier)
+        addSubview(urlsTable)
 
            NSLayoutConstraint.activate([
-            URLSTable.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
-            URLSTable.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor),
-            URLSTable.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor),
-               URLSTable.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -(vc!.tabBarController?.tabBar.frame.height ?? 0))
+            urlsTable.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+            urlsTable.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor),
+            urlsTable.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor),
+               urlsTable.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -(vc!.tabBarController?.tabBar.frame.height ?? 0))
            ])
     }
 }
