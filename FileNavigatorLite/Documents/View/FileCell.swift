@@ -25,9 +25,12 @@ class FileCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setContent(fileName: String, fileSize: String) {
+    func setContent(fileName: String, fileSize: String, fileUrl: URL) {
         fileNameLabel.text = fileName
         fileSizeLabel.text = "Size: \(fileSize) bytes"
+        
+        let controller = UIDocumentInteractionController(url: fileUrl)
+        imageView?.image = controller.icons[0]
     }
     
     // MARK: - Private methods
@@ -35,7 +38,7 @@ class FileCell: UITableViewCell {
         fileNameLabel.translatesAutoresizingMaskIntoConstraints = false
         fileNameLabel.textAlignment = .left
         fileNameLabel.lineBreakMode = .byWordWrapping
-        fileNameLabel.numberOfLines = 3
+        fileNameLabel.numberOfLines = 4
         contentView.addSubview(fileNameLabel)
         
         fileSizeLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -44,12 +47,11 @@ class FileCell: UITableViewCell {
         contentView.addSubview(fileSizeLabel)
         
         NSLayoutConstraint.activate([
-            fileNameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            fileNameLabel.leadingAnchor.constraint(equalTo: imageView!.trailingAnchor, constant: 4),
             fileNameLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
             fileNameLabel.bottomAnchor.constraint(equalTo: fileSizeLabel.topAnchor, constant: -4),
             fileNameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            
-            fileSizeLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            fileSizeLabel.leadingAnchor.constraint(equalTo: imageView!.trailingAnchor, constant: 4),
             fileSizeLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             fileSizeLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
         ])

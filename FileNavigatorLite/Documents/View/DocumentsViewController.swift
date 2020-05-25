@@ -32,8 +32,8 @@ class DocumentsViewController: UIViewController {
     
     @objc private func handleFileNotification(_ notification: NSNotification) {
        if let dict = notification.userInfo as NSDictionary? {
-           if let item = dict["file"] {
-            files.append(item as! FileModel)
+           if let items = dict["files"] as? [FileModel] {
+            files.append(contentsOf: items)
             
             DispatchQueue.main.async { [weak self] in
                 guard let view = self?.view as? DocumentsView else {
@@ -66,7 +66,7 @@ extension DocumentsViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = FileCell()
-        cell.setContent(fileName: files[indexPath.row].name, fileSize: String(files[indexPath.row].size))
+        cell.setContent(fileName: files[indexPath.row].name, fileSize: String(files[indexPath.row].size), fileUrl: files[indexPath.row].url)
         return cell
     }
     
