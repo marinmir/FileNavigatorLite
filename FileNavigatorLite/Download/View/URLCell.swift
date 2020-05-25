@@ -34,7 +34,7 @@ class URLCell: UITableViewCell {
         urlLabel.translatesAutoresizingMaskIntoConstraints = false
         urlLabel.textAlignment = .left
         urlLabel.lineBreakMode = .byWordWrapping
-        urlLabel.numberOfLines = 3
+        urlLabel.numberOfLines = 5
         contentView.addSubview(urlLabel)
         
         indicator.translatesAutoresizingMaskIntoConstraints = false

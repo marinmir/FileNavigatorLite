@@ -8,5 +8,11 @@
 	<string>https://wolverine.raywenderlich.com/books/con/image-from-rawpixel-id-466818-jpeg.jpg</string>
 	<key>Item 2</key>
 	<string>https://wolverine.raywenderlich.com/books/con/image-from-rawpixel-id-466821-jpeg.jpg</string>
+	<key>New item</key>
+	<string>file:///Users/marinmir/Downloads/%D0%A3%D1%81%D1%82%D0%B0%D0%B2%20%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B0.pdf</string>
+	<key>New item - 2</key>
+	<string>https://s1.stc.all.kpcdn.net/putevoditel/projectid_103889/images/tild3433-3361-4231-b364-643366613265__20170525_gaf_u40_567.jpg</string>
+	<key>New item - 3</key>
+	<string>https://images.unsplash.com/photo-1590233183626-b14c6b5de8e9?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=668&amp;q=80</string>
 </dict>
 </plist>

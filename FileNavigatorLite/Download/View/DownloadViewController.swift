@@ -13,6 +13,7 @@ class DownloadViewController: UIViewController {
     private var urls: [URL] = []
     private var filesWereDownloaded: [Bool] = []
     private var clickedDownloadAll = false
+    private var loadedFiles: [FileModel] = []
     
     // MARK: - Public methods
     override func viewDidLoad() {
@@ -37,46 +38,55 @@ class DownloadViewController: UIViewController {
         urls = serialUrls.values.compactMap(URL.init)
     }
     
-    private func downloadFile(index: Int) {
-        guard let view = self.view as? DownloadView,
-            let cell = view.urlsTable.cellForRow(at: IndexPath(row: index, section: 0)) as? URLCell else {
-                return
+    private func downloadFile(index: Int, shouldPostNotification: Bool = true) {
+        DispatchQueue.main.async {
+            guard let view = self.view as? DownloadView,
+                let cell = view.urlsTable.cellForRow(at: IndexPath(row: index, section: 0)) as? URLCell else {
+                    return
+            }
+            cell.indicator.startAnimating()
         }
-        cell.indicator.startAnimating()
         
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-              guard let self = self else {
-                  return
-              }
-            
-            guard let loadedItem = try? Data(contentsOf: self.urls[index]) else {
-                return
-            }
-            
-            self.saveFile(index: index, loadedItem: loadedItem)
-            
-            DispatchQueue.main.async {
-                cell.indicator.stopAnimating()
-            }
+        guard let loadedItem = try? Data(contentsOf: self.urls[index]) else {
+            return
         }
+        
+        let fullUrl = self.getFileUrl(fileUrl: self.urls[index])
+        self.saveFile(fullUrl: fullUrl, loadedItem: loadedItem)
+        
+        let file = self.createFileModel(URL: fullUrl, name: self.urls[index].lastPathComponent, size: Double(loadedItem.count))
+        self.loadedFiles.append(file)
+        
+        if shouldPostNotification {
+            self.postNotification(items: self.loadedFiles)
+        }
+        
+        DispatchQueue.main.async {
+            guard let view = self.view as? DownloadView,
+                let cell = view.urlsTable.cellForRow(at: IndexPath(row: index, section: 0)) as? URLCell else {
+                    return
+            }
+            cell.indicator.stopAnimating()
+        }
+        
     }
     
-    private func saveFile(index: Int, loadedItem: Data) {
-        let localUrl = self.urls[index].lastPathComponent
+    private func saveFile(fullUrl: URL, loadedItem: Data) {
+        try? loadedItem.write(to: fullUrl, options: .atomic)
+    }
+    
+    private func getFileUrl(fileUrl: URL) -> URL {
+        let localUrl = fileUrl.lastPathComponent
         
         guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             assert(false)
-            return
+            return URL(fileURLWithPath: "")
         }
-        let fullURL = dir.appendingPathComponent(localUrl)
-        try? loadedItem.write(to: fullURL, options: .atomic)
-        
-        self.postNotification(fileURL: fullURL, name: localUrl, size: Double(loadedItem.count))
+        return dir.appendingPathComponent(localUrl)
     }
     
-    private func postNotification(fileURL: URL, name: String, size: Double) {
-        let fileModel = createFileModel(URL: fileURL, name: name, size: size)
-        let notificationData = ["file" : fileModel]
+    private func postNotification(items: [FileModel]) {
+        let notificationData = ["files" : items]
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: Constants.notificationFileName), object: nil, userInfo: notificationData)
     }
     
@@ -96,17 +106,28 @@ class DownloadViewController: UIViewController {
     
     private func downloadAll() {
         if !clickedDownloadAll {
+            let downloadGroup = DispatchGroup()
             clickedDownloadAll = true
-            for i in 0..<urls.count {
-                if !wasDownloadedFile(index: i){
-                    filesWereDownloaded[i] = true
-                    downloadFile(index: i)
+            DispatchQueue.concurrentPerform(iterations: urls.count) { index in
+                downloadGroup.enter()
+                if !wasDownloadedFile(index: index) {
+                    filesWereDownloaded[index] = true
+                    downloadFile(index: index, shouldPostNotification: false)
                 }
+                downloadGroup.leave()
+            }
+            
+            downloadGroup.notify(queue: DispatchQueue.main) { [weak self] in
+                guard let self = self else {
+                    return
+                }
+                
+                self.postNotification(items: self.loadedFiles)
             }
         } else {
-            showAlertAlreadyDownoaded(with: "All files were already downloaded")
+                    showAlertAlreadyDownoaded(with: "All files were already downloaded")
+                }
         }
-    }
     
 }
 
@@ -140,13 +161,21 @@ extension DownloadViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.row == urls.count {
-            downloadAll()
+            loadedFiles = []
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.downloadAll()
+            }
+            
         } else {
             if wasDownloadedFile(index: indexPath.row) {
                 showAlertAlreadyDownoaded(with: "File \(urls[indexPath.row].lastPathComponent) was already downloaded")
             } else {
                 filesWereDownloaded[indexPath.row] = true
-                downloadFile(index: indexPath.row)
+                loadedFiles = []
+                DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                    self?.downloadFile(index: indexPath.row)
+                }
+                
             }
         }
         tableView.deselectRow(at: indexPath, animated: true)
